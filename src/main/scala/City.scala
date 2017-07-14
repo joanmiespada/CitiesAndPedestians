@@ -8,14 +8,14 @@ import scala.collection.mutable.ListBuffer
 
 object City
 {
-  case object FindSpace
+  case class FindNextSpaceAvailable(current: Location)
   case object AddPedestrian
 }
 
 object State extends Enumeration
 {
   val Free, Busy, Building = Value
-  val types = Seq(Free,Busy)
+  val types = Seq(Free,Busy,Building)
 }
 
 class City extends Actor with ActorLogging
@@ -30,14 +30,23 @@ class City extends Actor with ActorLogging
 
   def receive ={
 
-    case City.FindSpace => FindSpace()
-    //case _ => log.info("message received")
-    //case City.AddPedestrian=> pedestrians += new Person()
+      case City.FindNextSpaceAvailable(from) =>
+        try {
+          val resultTo = FindSpace(from)
+          sender() ! resultTo
+        }catch {
+            case e: Exception =>
+            sender() ! akka.actor.Status.Failure(e)
+            throw e
+        }
+      case _ => log.info("message received")
+      //case City.AddPedestrian=> pedestrians += new Person()
+
 
   }
 
-  def FindSpace():Unit = {
-    log.info("looking for a new route")
+  def FindSpace(from:Location):Location = {
+    return new Location( from.x+1, from.y+1 )
   }
 
   def BuildBuildings():Unit =
